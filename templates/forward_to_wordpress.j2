@@ -1,0 +1,41 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+
+upstream site-{{ wp_site_instance_uid }} {
+	ip_hash;   # sticky session by client ip
+	server {{ wp_site_ip_address}}:80 max_fails=1 fail_timeout=30s;
+}
+
+server {
+
+	listen 80;
+	server_name {{ wp_site_domains | join(" ") }};
+
+	root /srv/wordpress/{{ wp_site_instance_uid }};
+	access_log  /var/log/nginx/wordpress/{{ wp_site_instance_uid }}_access.json json;
+
+	location / {
+		#if (-f $document_root/maintenance.html) {
+		#	return 503;
+		#}
+
+		proxy_pass http://site-{{ wp_site_instance_uid }};
+		#add_header Cache-Control no-cache;
+		proxy_set_header HOST $http_host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_redirect off;
+		proxy_connect_timeout 45s;
+		proxy_next_upstream error timeout invalid_header;
+		client_body_buffer_size 1024k;
+
+		# Uncomment to enable naxsi on this location
+		# include /etc/nginx/naxsi.rules
+	}
+
+	location /nginx_status {
+		stub_status on;
+		access_log   on;
+		allow 127.0.0.1;
+		deny all;
+	}
+}

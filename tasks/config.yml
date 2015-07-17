@@ -1,0 +1,20 @@
+---
+
+- name: config - setup local document root for site
+  file:
+    state=directory
+    path=/srv/wordpress/{{ wp_site_instance_uid }}
+
+- name: config - setup log folder
+  file:
+    state=directory
+    path=/var/log/nginx/wordpress/
+    mode=755
+
+- name: config - setup enabled site
+  template:
+    src=forward_to_wordpress.j2
+    dest=/etc/nginx/sites-enabled/{{ wp_site_instance_uid }}
+  notify:
+    - reload nginx
+

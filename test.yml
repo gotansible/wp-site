@@ -1,0 +1,11 @@
+---
+- hosts: all
+  sudo: true
+  pre_tasks:
+    - name: add /etc/nginx/sites-enabled
+      file:
+        state=directory
+        path=/etc/nginx/sites-enabled
+
+  roles:
+    - role: wp-site

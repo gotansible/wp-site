@@ -2,9 +2,10 @@
 
 wp_site_instance_uid: wionesit232242
 
+wp_site_domain_root: example.com
 wp_site_domains:
-  - ~^www\.example\.com$
-  - ~^blog\.example\.com$
-  - ~^example\.com$
+  - example.com
+  - www.example.com
+  - blog.example.com
 
 wp_site_ip_address: 127.0.0.1

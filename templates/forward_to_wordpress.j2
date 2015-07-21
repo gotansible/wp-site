@@ -2,16 +2,17 @@
 
 upstream site-{{ wp_site_instance_uid }} {
 	ip_hash;   # sticky session by client ip
-	server {{ wp_site_ip_address}}:80 max_fails=1 fail_timeout=30s;
+	server {{ wp_site_ip_address}}:80 max_fails=2 fail_timeout=30s;
 }
 
 server {
 
 	listen 80;
-	server_name {{ wp_site_domains | join(" ") }};
+	server_name {% for site in wp_site_domains %}~^{{ site|replace(".", "\.") }}$ {% endfor %};
 
 	root /srv/wordpress/{{ wp_site_instance_uid }};
 	access_log  /var/log/nginx/wordpress/{{ wp_site_instance_uid }}_access.json json;
+	error_log  /var/log/nginx/wordpress/{{ wp_site_instance_uid }}_error.log;
 
 	location / {
 		#if (-f $document_root/maintenance.html) {
@@ -19,11 +20,14 @@ server {
 		#}
 
 		proxy_pass http://site-{{ wp_site_instance_uid }};
-		#add_header Cache-Control no-cache;
-		proxy_set_header HOST $http_host;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+		proxy_set_header	HOST				wp_site_domain_root;
+		proxy_set_header	X-Real-IP			$remote_addr;
+		proxy_set_header	X-Forwarded-For		$proxy_add_x_forwarded_for;
+		proxy_set_header	X-Forwarded-Proto	$scheme;
+
 		proxy_redirect off;
+
 		proxy_connect_timeout 45s;
 		proxy_next_upstream error timeout invalid_header;
 		client_body_buffer_size 1024k;
@@ -34,8 +38,7 @@ server {
 
 	location /nginx_status {
 		stub_status on;
-		access_log   on;
-		allow 127.0.0.1;
-		deny all;
+		access_log  on;
+		include global/acl-status.conf
 	}
 }

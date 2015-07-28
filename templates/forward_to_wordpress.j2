@@ -39,6 +39,6 @@ server {
 	location /nginx_status {
 		stub_status on;
 		access_log  on;
-		include global/acl-status.conf;
+		include global/acl-stats.conf;
 	}
 }
